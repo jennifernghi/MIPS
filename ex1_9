@@ -1,0 +1,57 @@
+#
+#lw $t0, 4($gp)	 // get i address, store in $t0
+#li $t0, 0 		// assign i=0
+#li $t5, 5 		// constant 5, stored in $t5
+#lw $s1, 8($gp)	// store a[0] in $s1, base address of a[]
+#
+#loop: 
+#	beq 	$t0, $t5, EXIT    	// if i==5, exit loop
+#	sll 	$t1, $t0, 1 	     	// 2*i, temp store in $t1
+#	sll 	$t2, $t0, 2	          //  4*i: offset
+#	add 	$t2 , $t2, $s1 // new address for a[i] i.e: memory[base address + offset]
+#	sw       $t1, 0($t2)    		// a[i] = 2 * i
+#add     $t0, $t0,1                 // i++
+#j	loop			// start new loop
+#EXIT:
+
+#
+.data 
+a: .space 20
+prompt:	        .asciiz "\n" 
+.text 
+
+li 	$t0, 0 # assign i=0
+li 	$t5, 5 # constant 5
+la 	$s1, a # load base address of a
+
+loop: 
+	beq	$t0, $t5 , exit
+	sll 	$t1, $t0,1
+	sll	$t2, $t0, 2
+	add 	$t2, $t2, $s1
+	sw 	$t1, 0($t2)
+	add 	$t0, $t0, 1
+	j 	loop
+	
+print:
+	
+ 	
+ 	beq	$t0, $t5 , quit
+ 	add 	$t2, $t0, $t0
+	add	$t2, $t2, $t2
+	lw $t6, a($t2) 
+	
+	li $v0, 1
+	move $a0, $t6
+	
+	syscall 
+	
+	add 	$t0, $t0, 1
+	j	print
+	
+exit:
+
+add $t0, $zero, 0
+j print
+
+quit:

@@ -1,4 +1,12 @@
 #<------------------ MACRO DEFINITIONS ---------------------->#
+
+	.macro read_int($arg)
+	
+	.end_macro 
+	
+	.macro print_reg_int($arg)
+	
+	.end_macro 
         # Macro : print_str
         # Usage: print_str(<address of the string>)
         .macro print_str($arg)

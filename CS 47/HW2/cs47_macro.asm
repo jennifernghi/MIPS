@@ -1,11 +1,16 @@
 #<------------------ MACRO DEFINITIONS ---------------------->#
-
+	# read an int from stdio
 	.macro read_int($arg)
-	
+	li $v0, 5  # code for read int
+	syscall    # read int from stdio and store back in $v0
+	move $arg, $v0 # move the value in $v0 to desired register
 	.end_macro 
 	
+	#print int value stored in $arg register
 	.macro print_reg_int($arg)
-	
+	li $v0, 1 # code for print int
+	move $a0, $arg # move value store in $ arg to $a0
+	syscall #print int value stored in $a0
 	.end_macro 
         # Macro : print_str
         # Usage: print_str(<address of the string>)

@@ -35,11 +35,11 @@ main:
 	print_str(strNewline)	# Prints: newline
 	
 	# Swap the content
-	swap_hi_lo($t0,$t1)
+	#swap_hi_lo($t0,$t1)
 	
 	#print content of Hi and Lo
 	print_str(msg3) 	# Prints: After swaping
-	print_hi_lo (strHi, strEqual, strComma, strLo)		
+	#print_hi_lo (strHi, strEqual, strComma, strLo)		
 				# Prints: Hi = <val> , Lo = <val>
 	print_str(strNewline)	# Prints: newline
 	

@@ -1,4 +1,6 @@
 #<------------------ MACRO DEFINITIONS ---------------------->#
+
+#----------------Question 1------------------#
 	# read an int from stdio
 	.macro read_int($arg)
 	li $v0, 5  # code for read int
@@ -11,6 +13,21 @@
 	li $v0, 1 # code for print int
 	move $a0, $arg # move value store in $ arg to $a0
 	syscall #print int value stored in $a0
+	.end_macro 
+	
+#----------------Question 2------------------#
+
+	.macro print_hi_lo($strHi,$strEqual, $strComma, $strLo)
+	mfhi $t1 # move hi value from hi register to $t1
+	mflo $t2 # move hi value from hi register to $t2
+	print_str($strHi)
+	print_str($strEqual)
+	print_reg_int($t1)
+	print_str($strComma)
+	
+	print_str($strLo)
+	print_str($strEqual)
+	print_reg_int($t2)
 	.end_macro 
         # Macro : print_str
         # Usage: print_str(<address of the string>)

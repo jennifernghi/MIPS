@@ -18,26 +18,29 @@
 #----------------Question 2------------------#
 
 	.macro print_hi_lo($strHi,$strEqual, $strComma, $strLo)
-	mfhi $t3 # move hi value from hi register to $t5
-	mflo $t4 # move hi value from hi register to $t6
-	print_str($strHi)
-	print_str($strEqual)
-	print_reg_int($t3)
-	print_str($strComma)
+	mfhi $t3 # move hi value from hi register to $t3
+	mflo $t4 # move hi value from hi register to $t4
 	
-	print_str($strLo)
-	print_str($strEqual)
-	print_reg_int($t4)
+	print_str($strHi)    # print string Hi
+	print_str($strEqual) # print string = 
+	print_reg_int($t3)   # print value of hi
+	print_str($strComma) # print string ,
+	
+	print_str($strLo)    # print string Lo
+	print_str($strEqual) # print string = 
+	print_reg_int($t4)   # print value of lo
 	.end_macro 
 	
-	.macro swap_hi_lo($hi,$lo)
-	move $t5, $hi
-	move $t6, $lo
-	move $hi, $t6
-	move $lo, $t5
+	# swap value of hi and lo
+	.macro swap_hi_lo($temp1,$temp2)
 	
-	mthi $hi
-	mtlo $lo
+	mfhi $temp1 # $temp1 now have the value of hi
+	mflo $temp2 # $temp2 now have the value of lo
+	
+	# swap
+	
+	mthi $temp2 # move the value of temp 2 to hi
+	mtlo $temp1 # move the value of temp 1 to lo
 	
 	.end_macro 
         # Macro : print_str

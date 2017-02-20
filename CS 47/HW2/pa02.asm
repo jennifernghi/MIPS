@@ -25,8 +25,8 @@ main:
 	print_str(msg1)       	# Prints: Enter a number for
 	print_str(strLo)      	# Prints: Hi
 	print_str(strQuery)   	# Prints: ? 
-	read_int($t1)         	# Read integer into $t0
-	mtlo $t1	      	# Move $t0 value to Lo
+	read_int($t0)         	# Read integer into $t0
+	mtlo $t0	      	# Move $t0 value to Lo
 	
 	#print content of Hi and Lo
 	print_str(msg2) 	# Prints: Before swaping

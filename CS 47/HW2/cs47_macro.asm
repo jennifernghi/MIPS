@@ -18,21 +18,35 @@
 #----------------Question 2------------------#
 
 	.macro print_hi_lo($strHi,$strEqual, $strComma, $strLo)
-	mfhi $t3 # move hi value from hi register to $t3
-	mflo $t4 # move hi value from hi register to $t4
+	# callee: save s1 and s2
+	addi $sp, $sp, -8
+	sw $s1, 4($sp)
+	sw $s2, 0($sp)
+	
+	mfhi $s1 # move hi value from hi register to $t3
+	mflo $s2 # move hi value from hi register to $t4
 	
 	print_str($strHi)    # print string Hi
 	print_str($strEqual) # print string = 
-	print_reg_int($t3)   # print value of hi
+	print_reg_int($s1)   # print value of hi
 	print_str($strComma) # print string ,
 	
 	print_str($strLo)    # print string Lo
 	print_str($strEqual) # print string = 
-	print_reg_int($t4)   # print value of lo
+	print_reg_int($s2)   # print value of lo
+	
+	#callee restore $s1, $s2
+	lw $s1, 4($sp)
+	lw $s2, 0($sp)
+	addi $sp, $sp, 8
 	.end_macro 
 	
 	# swap value of hi and lo
 	.macro swap_hi_lo($temp1,$temp2)
+	# callee: save temp1 and temp2
+	addi $sp, $sp, -8
+	sw $temp1, 4($sp)
+	sw $temp2, 0($sp)
 	
 	mfhi $temp1 # $temp1 now have the value of hi
 	mflo $temp2 # $temp2 now have the value of lo
@@ -41,6 +55,11 @@
 	
 	mthi $temp2 # move the value of temp 2 to hi
 	mtlo $temp1 # move the value of temp 1 to lo
+	
+	#callee restore $temp1, $temp2
+	lw $temp1, 4($sp)
+	lw $temp2, 0($sp)
+	addi $sp, $sp, 8
 	
 	.end_macro 
         # Macro : print_str

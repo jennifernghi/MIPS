@@ -10,9 +10,13 @@
 	
 	#print int value stored in $arg register
 	.macro print_reg_int($arg)
+	addi $sp, $sp, -4
+	sw $a0, 0($sp)
 	li $v0, 1 # code for print int
 	move $a0, $arg # move value store in $ arg to $a0
 	syscall #print int value stored in $a0
+	lw $a0, 0($sp)
+	addi $sp, $sp, 4
 	.end_macro 
 	
 #----------------Question 2------------------#

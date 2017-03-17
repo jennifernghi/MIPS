@@ -12,26 +12,28 @@ int main(void){
     printf("size = ");
     scanf("%d", &size);
     
+    int k=0;
     int a[size];
-    for(int i =0; i<size;i++){
+    for(int i =0; i<2*size;i=i+2){
         int temp = 0;
         scanf("%d", &temp);
         if(temp!=0){
-            a[i] = temp;
+            a[k] = temp;
+            a[k+1] = i/2;
+            k += 2;
         }
     }
     
+    printf("k %d\n", k);
     
     printf("non-zero element:\n");
-    for(int i =0; i<size; i++){
-        if(a[i]!=0)
-            printf("%d\n", a[i]);
+    for(int i =0; i<k; i=i+2){
+        printf("%d\n", a[i]);
         
     }
     
     printf("index non-zero element:\n");
-    for(int i =0; i<size; i++){
-        if (a[i]!=0)
-            printf("%d\n", i);
+    for(int i =1; i<=k; i+=2){
+        printf("%d\n", a[i]);
     }
 }

@@ -165,6 +165,7 @@ main:	print_str(msg1)
 	#call factorial macro
 	factorial($t0)
 	
+	
 
 	print_str(msg2)
 	print_reg_int($s0)

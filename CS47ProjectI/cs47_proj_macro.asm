@@ -43,3 +43,10 @@ andi $regD, $regD, 1
 #$regT: Register that contains 0x1 or 0x0 (bit value to insert)
 #$maskReg: Register to hold temporary mask
 .macro insert_one_to_nth_bit($regD, $regS, $regT, $maskReg)
+li $maskReg, 1
+sllv $maskReg, $maskReg, $regS #shifting 0x1 for $regS amount
+not $maskReg, $maskReg # invert
+and $regD, $regD, $maskReg #Mask $regD with $maskReg.
+sllv $regT, $regT, $regS #Now, shift left register $regT by amount in $regS
+or $regD, $regT, $regD #logically OR this resultant pattern to $regD
+.end_macro

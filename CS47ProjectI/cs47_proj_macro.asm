@@ -33,8 +33,9 @@
 #$regS: Source bit pattern
 #$regT: Bit position n (0-31)
 .macro extract_nth_bit($regD, $regS, $regT)
-srlv $regD, $regS, $regT
+srav $regD, $regS, $regT
 andi $regD, $regD, 1
+
 .end_macro
 
 #----------------------------------------------------------------------#

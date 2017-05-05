@@ -30,19 +30,52 @@ v0: .asciiz  " v0 "
 # Notes:
 #####################################################################
 au_logical:
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
-	beq $a2, 43, add_or_sub
+
+	beq $a2, '+', add_logical
 	
-	beq $a2, 45, add_or_sub
+	beq $a2, '-', sub_logical
 	
-	beq $a2, 42, domultiplication
+	beq $a2, '*', domultiplication
 	
-	beq $a2, 47, dodivide
+	beq $a2, '/', dodivide
 	
+add_logical:
+	li $a2, 0 #add mode $a2 = 0
+	j add_sub_logical	
 	
-add_or_sub:
+sub_logical:
+	li $a2, 1 #sub mode $a2 = 1
+	j add_sub_logical
+add_sub_logical:
+
+
+#int add_sub(int *a0, int *a1, int *a2){ 
+#    int s0 =0; // i =0; index; li 0 in MIPS
+#    int v0 = 0; //S =0; li 0 in MIPS    
+#    int s1 =0; // carry   
+#    int s2 = 0; // y
+#    int t0, t1, t2, t3 =0;//temp regs    
+#    s1 = *a2  
+#    if(s1==1){
+#        *a1 = ~ *a1; //sub
+#    }    
+#    while(s0<32){
+#        extract_nth_bit(&t0, *a0, s0); //t0
+#        extract_nth_bit(&t1, *a1, s0); //t1        
+#        t2 = t0 ^ t1;
+#        s2 = t2 ^ s1; //y = A^B^Ci  
+#        t3  = t0 & t1;
+#        s1 = s1 & t2;
+#        s1 = t3 | s1; //carry = (AB) + Ci(A^B)     
+#        if(s2!=0){
+#            insert_one_to_nth_bit(&v0, s0, s2, 1); //s[i] = y
+#        }       
+#        ++s0;       
+#    }
+#    return v0;    
+#}
 	addi $sp, $sp, -32
+	sw $ra, 0($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
 	sw $t0, 12($sp)
@@ -56,16 +89,13 @@ add_or_sub:
 	li $v0,0 #result
 	li $t4, 1
 	
-	#get the correct mode: 1 fo subtraction, 0 for addition
-	extract_nth_bit($s1, $a2, $t4) # get the bit at position 1 of a2
-	not $s1, $s1
-	andi $s1, $s1, 1
+	move $s1, $a2
 	
-	beqz $s1, add_or_sub_while_loop
+	beqz $s1, add_sub_logical_while_loop
 	not $a1, $a1
 	
-	add_or_sub_while_loop:
-		beq $s0, 32, add_or_sub_end
+	add_sub_logical_while_loop:
+		beq $s0, 32, add_sub_logical_exit
 		extract_nth_bit($t0, $a0, $s0)
 		extract_nth_bit($t1, $a1, $s0)
 		
@@ -75,21 +105,21 @@ add_or_sub:
 		
 		and $t3, $t0, $t1
 		and $s1, $s1, $t2
-		or $s1, $t3, $s1
+		or $s1, $t3, $s1 #carry = (AB) + Ci(A^B) 
 		
 		
-		bnez $s2, insert
+		bnez $s2, insert_y_to_Si
 		addi $s0, $s0, 1
-		j add_or_sub_while_loop
+		j add_sub_logical_while_loop
 
-		insert:
+		insert_y_to_Si:  #s[i] = y
 		
 			insert_one_to_nth_bit($v0, $s0, $s2, $t4)
 			addi $s0, $s0, 1
-			j add_or_sub_while_loop
+			j add_sub_logical_while_loop
 		
-	add_or_sub_end:
-		
+	add_sub_logical_exit:
+		move $v1, $s1 # extension: Upgrade add_logical to return final carryout in $v1
 		lw $ra, 0($sp)
 		lw $s0, 4($sp)
 		lw $s1, 8($sp)
@@ -98,8 +128,8 @@ add_or_sub:
 		lw $t2, 20($sp)
 		lw $t3, 24($sp)
 		lw $t4, 28($sp)
-
 		addi $sp, $sp, 32
+		j exit
 	
 domultiplication:
 	
@@ -108,7 +138,151 @@ dodivide:
 	
 	j exit		
 	
-exit:
+	
+twos_complement:
+#int twos_complement(int a0){
+#    a0  = ~a0;
+#    int a1 = 1;
+#    int a2 = 0;   
+#   return  add_Logical(&a0, &a1, &a2); 
+#}
+	addi $sp, $sp, -16
+	sw $a0, 0($sp)
+	sw $a1, 4($sp)
+	sw $a2, 8($sp)
+	sw $ra, 12($sp)
+	
+	not $a0, $a0
+	li $a1, 1
+	jal add_logical # ~a0 + 1
+	 	
+	lw $ra, 12($sp) 	
+	lw $a0, 0($sp)
+	lw $a1, 4($sp)
+	lw $a2, 8($sp) 	
+	addi $sp, $sp, 16
+	j exit	
+twos_complement_if_neg:	
+#int twos_complement_if_neg(int a0){   
+#    if(a0<0)
+#        return  twos_complement(a0);   
+#}	
+	bltz $a0, twos_complement
+	j exit
+	
+twos_complement_64bit:
+	addi $sp, $sp, -16
+	sw $ra, 0($sp)
+	sw $a0, 4($sp)
+	sw $a1, 8($sp)
+	sw $t0, 12($sp)
+	
+	not $a0, $a0 # $a0 = ~a0
+	not $a1, $a1
+	move $t0, $a1 # $t0 = ~a1
+	li $a1, 1	#a1 = 1
+	jal add_logical # $v0 = ~a0 +1 ->> lo
+			#$v1 = final carry
+	move $a0, $t0 #$a0 = ~a1
+	move $t0, $v0 # $t0 = ~a0 +1 ->> lo
+	move $a1, $v1 #$a1 = final carry
+	jal add_logical  #$v0 = ~a1 + final carry --> hi
+	move $v1, $v0 # $v1 = hi 2's complemented 
+	move $v0, $t0 # $v0 = lo 2's complemented 
+	
+
 	lw $ra, 0($sp)
-	addi $sp, $sp, 4
+	lw $a0, 4($sp)
+	lw $a1, 8($sp)
+	lw $t0, 12($sp)
+	addi $sp, $sp, 16
+	j exit
+
+bit_replicator:
+#int bit_replicator(int bit){
+#    if(bit==0){
+#        return 0x00000000;
+#    }else{
+#        return 0xFFFFFFFF;
+#    }
+#}
+	beq  $a0, 0, replicator0
+	beq  $a0, 1, replicator1
+	
+replicator0:
+	li $v0, 0x00000000
+	j exit
+	
+replicator1:	
+	li $v1, 0XFFFFFFFF
+	j exit
+	
+	
+mul_unsigned:
+#s0,s1,s2,s3,t0,t1,t2,t3,t4,t5,t6,ra
+
+#void mul_unsigned(int a0,  int a1, int *v0, int *v1){
+#    int s0 =0; //i =0
+#    int s1 =0; //H =0
+#    int s2 = a1; //L = MPLR multiplier
+#    int s3 = a0; //M = MCND multipliplicand   
+#    while(s0<32){
+#        int t4 =0;
+#        int t5 = 31;
+#        int t0; // store L[0]
+#        extract_nth_bit(&t0, s2, t4);
+#        int t1 = bit_replicator(t0); // R = {32(L[0])}
+#        int t2 = s3 & t1; //X = M & R
+#        int t3 =1;        
+#        s1 = s1 + t2; //H = H + X
+#        s2 = s2 >> t3; //L = L >> 1       
+#        int t6 = 0;
+#        extract_nth_bit(&t6, s1, t4); //H[0]
+#        insert_one_to_nth_bit(&s2, t5, t6, t3); //L[31] = H[0]        
+#        s1 = s1 >> t3; //H = H >> 1        
+#        ++s0; //++i       
+#    }   
+#    *v0 = s2; //v0 = lo
+#    *v1 = s1; // v1 = hi
+#}
+	addi $sp, $sp, -48
+	sw $s0, 0($sp)	
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	sw $t2, 24($sp)
+	sw $t3, 28($sp)
+	sw $t4, 32($sp)
+	sw $t5, 36($sp)
+	sw $t6, 40($sp)
+	sw $ra, 44($sp)
+	
+	li $s0, 0 # I =0
+	li $s1, 0 # H =0
+	move $s2, $a1 #L = MPLR multiplier
+	move $s3, $a0 #M = MCND multipliplicand 
+	
+	
+
+	mul_unsigned_end:
+	move $v0, $s2 #v0 = L
+	move $v1, $s1 #v1 = H
+	lw $s0, 0($sp)	
+	lw $s1, 4($sp)
+	lw $s2, 8($sp)
+	lw $s3, 12($sp)
+	lw $t0, 16($sp)
+	lw $t1, 20($sp)
+	lw $t2, 24($sp)
+	lw $t3, 28($sp)
+	lw $t4, 32($sp)
+	lw $t5, 36($sp)
+	lw $t6, 40($sp)
+	lw $ra, 44($sp)
+	addi $sp, $sp, 48
+	j exit	
+exit:
+	
 	jr $ra

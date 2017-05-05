@@ -1,0 +1,9 @@
+.data
+newline: .asciiz "\n"
+.text
+.globl main
+main:
+	li $t1, 0x00000000
+	li $t2, 0xFFFFFFFF
+
+	addi $t3, $zero, 2

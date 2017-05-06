@@ -264,62 +264,47 @@ mul_signed:
 #        //v0: lo ; v1: hi
 #    }   
 #}
-	addi $sp, $sp, -56	
+	addi $sp, $sp, -28
 	sw $s0, 0($sp)
 	sw $s1, 4($sp)	
 	sw $s2, 8($sp)	
-	sw $t0, 12($sp)	
-	sw $t1, 16($sp)	
-	sw $t2, 20($sp)	
-	sw $t3, 24($sp)	
-	sw $ra, 28($sp)
-	sw $t4, 32($sp)
-	sw $a0, 36($sp)
-	sw $a1, 40($sp)
-	sw $t8, 44($sp)
-	sw $t9, 48($sp)
-	sw $t7, 52($sp)
+	sw $ra, 12($sp)	
+	sw $t4, 16($sp)
+	sw $a0, 20($sp)
+	sw $a1, 24($sp)
 	
 	li $t4, 31	
+
+	move $s0, $a0 # N1
+	move $s1, $a1 # N2
+	extract_nth_bit($t2, $a0, $t4)
+	extract_nth_bit($t3, $a1, $t4)
 	
-	move $s0, $a0
-	move $s1, $a1
-	move $t8, $s0
-	move $t9, $s1
+	jal twos_complement_if_neg # a0 is still a0
+	move $s0, $v0 # return from twos_complement_if_neg, twos_complement of N1
+	move $a0, $s1 # a0 = s1 prepare for twos_complement_if_neg
 	jal twos_complement_if_neg
-	move $s0, $v0
-	move $a0, $s1
-	jal twos_complement_if_neg
-	move $s1, $v0
+	move $s1, $v0 # return from twos_complement_if_neg, twos_complement of N2
 	
-	move $a0, $s0
-	move $a1, $s1
+	#prepare for mul_unsigned
+	move $a0, $s0 # a0 = N1
+	move $a1, $s1 # a1 = N2
 	jal mul_unsigned
-	move $t0, $v0
-	move $t1, $v1
-	extract_nth_bit($t2, $t8, $t4)
-	extract_nth_bit($t3, $t9, $t4)
-	xor $t7, $t2, $t3
-	beqz  $t7, mul_signed_end 
-	move $a0, $t0
-	move $a1, $t1
-	jal twos_complement_64bit																																																																																																										
+	move $a0, $v0 # lo result
+	move $a1, $v1 # hi result
+	xor $s2, $t2, $t3 # s2 = t2 ^ t3
+	beqz  $s2, mul_signed_end # if s2 ==0, just quit
+	jal twos_complement_64bit # if s2 ==1
+																																																																																																											
 	mul_signed_end:
 		lw $s0, 0($sp)
 		lw $s1, 4($sp)	
 		lw $s2, 8($sp)	
-		lw $t0, 12($sp)	
-		lw $t1, 16($sp)	
-		lw $t2, 20($sp)	
-		lw $t3, 24($sp)
-		lw $ra, 28($sp)	
-		lw $t4, 32($sp)
-		lw $a0, 36($sp)
-		lw $a1, 40($sp)
-		lw $t8, 44($sp)
-		lw $t9, 48($sp)
-		lw $t7, 52($sp)
-		addi $sp, $sp, 56
+		lw $ra, 12($sp)	
+		lw $t4, 16($sp)
+		lw $a0, 20($sp)
+		lw $a1, 24($sp)
+		addi $sp, $sp, 28
 		j exit
 	
 mul_unsigned:

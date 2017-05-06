@@ -35,7 +35,7 @@ au_logical:
 	
 	beq $a2, '-', sub_logical
 	
-	beq $a2, '*', domultiplication
+	beq $a2, '*', mul_signed
 	
 	beq $a2, '/', dodivide
 	
@@ -131,9 +131,6 @@ add_sub_logical:
 		addi $sp, $sp, 32
 		j exit
 	
-domultiplication:
-	
-	j exit
 dodivide:	
 	
 	j exit		
@@ -167,10 +164,25 @@ twos_complement_if_neg:
 #    if(a0<0)
 #        return  twos_complement(a0);   
 #}	
+	move $v0, $a0
 	bltz $a0, twos_complement
 	j exit
 	
 twos_complement_64bit:
+#void twos_complement_64bit(int a0, int a1, int *v0, int *v1){
+#    a0 = ~ a0;
+#    int t0 = ~a1;
+#    a1 =1;
+    
+#    *v0 = add_Logical(a0, a1, 0, v1); 
+
+#    a0 = t0;
+#    t0 = *v0;
+#    a1 = *v1;
+    
+#    *v1 = add_Logical(a0, a1, 0, v1);
+#    *v0 = t0;   
+#}
 	addi $sp, $sp, -16
 	sw $ra, 0($sp)
 	sw $a0, 4($sp)
@@ -205,47 +217,136 @@ bit_replicator:
 #    }else{
 #        return 0xFFFFFFFF;
 #    }
-#}
+#}	
+	addi $sp, $sp, -8
+	sw $a0, 0($sp)
+	sw $ra, 4($sp)
 	beq  $a0, 0, replicator0
 	beq  $a0, 1, replicator1
 	
-replicator0:
-	li $v0, 0x00000000
-	j exit
+	replicator0:
+		li $v0, 0x00000000
+		j end_bit_replicator
 	
-replicator1:	
-	li $v1, 0XFFFFFFFF
-	j exit
+	replicator1:	
+		li $v0, 0XFFFFFFFF
+		j end_bit_replicator
+		
+	end_bit_replicator:
+		lw $a0, 0($sp)
+		lw $ra, 4($sp)
+		addi $sp, $sp, 8
+		j exit
+
+mul_signed:
+#void mul_signed(int a0,  int a1, int *v0, int *v1){
+#int s0 = a0; //N1 - Multiplicand
+#    int s1 = a1; //N2 - multiplier
+    
+#    //Make N1 two's complement if negative
+#    s0 = twos_complement_if_neg(a0, &s0);
+#    
+#    //Make N2 two's complement if negative
+#    s1 = twos_complement_if_neg(a1, &s1);
+#    
+#    //Call unsigned multiplication using N1, N2. Say the result is Rhi, Rlo
+#    mul_unsigned(s0,  s1, v0, v1);
+#    int t0 = *v0;
+#    int t1 = * v1;   
+#    int t2, t3;
+#    
+#    extract_nth_bit(&t2, a0, 31);
+#    extract_nth_bit(&t3, a1, 31);
+#        
+#    int s2 = t2 ^ t3; //S
+#    if(s2==1){
+#        twos_complement_64bit(t0, t1,  v0,  v1);
+#        //v0: lo ; v1: hi
+#    }   
+#}
+	addi $sp, $sp, -56	
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)	
+	sw $s2, 8($sp)	
+	sw $t0, 12($sp)	
+	sw $t1, 16($sp)	
+	sw $t2, 20($sp)	
+	sw $t3, 24($sp)	
+	sw $ra, 28($sp)
+	sw $t4, 32($sp)
+	sw $a0, 36($sp)
+	sw $a1, 40($sp)
+	sw $t8, 44($sp)
+	sw $t9, 48($sp)
+	sw $t7, 52($sp)
 	
+	li $t4, 31	
+	
+	move $s0, $a0
+	move $s1, $a1
+	extract_nth_bit($t2, $s0, $t4)
+	extract_nth_bit($t3, $s1, $t4)
+	jal twos_complement_if_neg
+	move $s0, $v0
+	move $a0, $s1
+	jal twos_complement_if_neg
+	move $s1, $v0
+	
+	move $a0, $s0
+	move $a1, $s1
+	jal mul_unsigned
+	move $t0, $v0
+	move $t1, $v1
+	xor $t7, $t2, $t3
+	beq $t7, 1, twos_complement_64bit
+	j mul_signed_end 																																																																																																										
+	mul_signed_end:
+		lw $s0, 0($sp)
+		lw $s1, 4($sp)	
+		lw $s2, 8($sp)	
+		lw $t0, 12($sp)	
+		lw $t1, 16($sp)	
+		lw $t2, 20($sp)	
+		lw $t3, 24($sp)
+		lw $ra, 28($sp)	
+		lw $t4, 32($sp)
+		lw $a0, 36($sp)
+		lw $a1, 40($sp)
+		lw $t8, 44($sp)
+		lw $t9, 48($sp)
+		lw $t7, 52($sp)
+		addi $sp, $sp, 56
+		j exit
 	
 mul_unsigned:
-#s0,s1,s2,s3,t0,t1,t2,t3,t4,t5,t6,ra
-
 #void mul_unsigned(int a0,  int a1, int *v0, int *v1){
 #    int s0 =0; //i =0
 #    int s1 =0; //H =0
 #    int s2 = a1; //L = MPLR multiplier
-#    int s3 = a0; //M = MCND multipliplicand   
+#    int s3 = a0; //M = MCND multipliplicand  
+#    int t3 =1; 
+#    int t4 =0;
+#    int t5 = 31; 
+#    int t6 = 0;
 #    while(s0<32){
-#        int t4 =0;
-#        int t5 = 31;
+#       
 #        int t0; // store L[0]
 #        extract_nth_bit(&t0, s2, t4);
 #        int t1 = bit_replicator(t0); // R = {32(L[0])}
 #        int t2 = s3 & t1; //X = M & R
-#        int t3 =1;        
+#               
 #        s1 = s1 + t2; //H = H + X
-#        s2 = s2 >> t3; //L = L >> 1       
-#        int t6 = 0;
+#        s2 = s2 >> 1; //L = L >> 1       
+#        
 #        extract_nth_bit(&t6, s1, t4); //H[0]
 #        insert_one_to_nth_bit(&s2, t5, t6, t3); //L[31] = H[0]        
-#        s1 = s1 >> t3; //H = H >> 1        
+#        s1 = s1 >> 1; //H = H >> 1        
 #        ++s0; //++i       
 #    }   
 #    *v0 = s2; //v0 = lo
 #    *v1 = s1; // v1 = hi
 #}
-	addi $sp, $sp, -48
+	addi $sp, $sp, -56
 	sw $s0, 0($sp)	
 	sw $s1, 4($sp)
 	sw $s2, 8($sp)
@@ -258,12 +359,36 @@ mul_unsigned:
 	sw $t5, 36($sp)
 	sw $t6, 40($sp)
 	sw $ra, 44($sp)
+	sw $a0, 48($sp)
+	sw $a1, 52($sp)
+	
 	
 	li $s0, 0 # I =0
 	li $s1, 0 # H =0
 	move $s2, $a1 #L = MPLR multiplier
 	move $s3, $a0 #M = MCND multipliplicand 
+	li $t5, 31
 	
+	j mul_unsigned_while
+	
+	mul_unsigned_while: 
+		beq $s0, 32, mul_unsigned_end
+		extract_nth_bit($t0, $s2, $zero)
+		move $a0, $t0 # prepare for replicator
+		jal bit_replicator
+		
+		move $t1, $v0 # R = {32(L[0])}
+		
+		and $t2, $s3, $t1 #X = M & R
+		add $s1, $s1, $t2 #H = H + X
+		srl $s2, $s2, 1 # L = L >> 1    
+		extract_nth_bit($t6, $s1, $zero) #H[0]
+		insert_one_to_nth_bit($s2, $t5, $t6, $t7) #L[31] = H[0] 
+		
+		srl $s1, $s1, 1 # H = H >> 1     
+		
+		addi $s0, $s0, 1
+		j mul_unsigned_while
 	
 
 	mul_unsigned_end:
@@ -281,8 +406,12 @@ mul_unsigned:
 	lw $t5, 36($sp)
 	lw $t6, 40($sp)
 	lw $ra, 44($sp)
-	addi $sp, $sp, 48
+	lw $a0, 48($sp)
+	lw $a1, 52($sp)
+	addi $sp, $sp, 56
 	j exit	
+	
+	
 exit:
 	
 	jr $ra

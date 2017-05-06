@@ -284,8 +284,8 @@ mul_signed:
 	
 	move $s0, $a0
 	move $s1, $a1
-	extract_nth_bit($t2, $s0, $t4)
-	extract_nth_bit($t3, $s1, $t4)
+	move $t8, $s0
+	move $t9, $s1
 	jal twos_complement_if_neg
 	move $s0, $v0
 	move $a0, $s1
@@ -297,9 +297,13 @@ mul_signed:
 	jal mul_unsigned
 	move $t0, $v0
 	move $t1, $v1
+	extract_nth_bit($t2, $t8, $t4)
+	extract_nth_bit($t3, $t9, $t4)
 	xor $t7, $t2, $t3
-	beq $t7, 1, twos_complement_64bit
-	j mul_signed_end 																																																																																																										
+	beqz  $t7, mul_signed_end 
+	move $a0, $t0
+	move $a1, $t1
+	jal twos_complement_64bit																																																																																																										
 	mul_signed_end:
 		lw $s0, 0($sp)
 		lw $s1, 4($sp)	

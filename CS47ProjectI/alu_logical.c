@@ -91,7 +91,6 @@ int twos_complement(int a0, int *v1){
     a0  = ~a0;
     int a1 = 1;
     int a2 = 0;
-     printf("twos_complement\n");
     
    return  add_Logical(a0, a1, a2, v1);
     
@@ -101,7 +100,7 @@ int twos_complement(int a0, int *v1){
 int twos_complement_if_neg(int a0, int *v1){
     
     if(a0 < 0){
-        printf("in twos_complement_if_neg:  a0 = %d\n", a0);
+      
         return  twos_complement(a0, v1);
     }
     
@@ -237,31 +236,120 @@ void div_unsigned(int a0,  int a1, int *v0, int *v1){
     int t2 = 31;
     int t3 =1;
     int t7;// dont need this in mips
-    
+    int t8 = 0;
     while(s0<32){
+         printf("---------------s0 = %d------------------\n", s0);
         s3 = s3 << 1;
+        printf("s3: %d\n", s3);
+        
         int t0;
         extract_nth_bit(&t0, s1, t2); // Q[31]
-        insert_one_to_nth_bit(&s3, 0, t0 , t3); // R[0] = Q[31]
+          printf("t0: %d\n", t0);
+        
+        insert_one_to_nth_bit(&s3, 0, t0 , 1); // R[0] = Q[31]
+          printf("s3: %d\n", s3);
         
         s1 = s1 << 1;
-        int t1 = sub_Logical (s3, s2, t3, &t7);//S
+          printf("s1: %d\n", s1);
+        printf("t1 = s3 - s2 = %d - %d = ", s3, s2);
+        int t1 = sub_Logical (s3, s2, 1, &t7);//S
+          printf(" %d\n", t1);
         
-        if(t1 >= 0){
-            s3 =t1;
-            insert_one_to_nth_bit(&s1, 0, t3 , t3); //Q[0] = 1
+    
+        if(t1 < 0){
+           
             ++s0;
-        }
+        }else{
+        
+        printf("t1 >= 0: %d\n");
+        s3 =t1;
+        printf("s3: %d\n", s3);
+        insert_one_to_nth_bit(&s1, 0, 1 , 1); //Q[0] = 1
+        printf("s1: %d\n", s1);
         
         ++s0;
+        }
         
     }
     
     *v0 = s1;
     *v1 = s3;
-    
+      printf("final v0: %d\n", *v0);
+      printf("final v1: %d\n", *v1);
     
     printf("---------------------------done div_unsigned---------------------------\n");
+}
+
+void div_signed(int a0,  int a1, int *v0, int *v1){
+    printf("---------------------------START mul_SIGNED---------------------------\n");
+    /*
+     N1 = $a0, N2 = $a1
+     
+     – Make N1 two's complement if negative
+     
+     – Make N2 two's complement if negative
+     
+     – Call unsigned Division using N1, N2. Say the result is Q and R
+     
+     – Determine sign S of Q
+     
+     ● Extract $a0[31] and $a1[31] bits and xor between them. The xor
+     
+     result is S.
+     
+     ● If S is 1, use the 'twos_complement' to determine two's complement
+     
+     form of Q.
+     
+     – Determine sign S of R
+     
+     ● Extract $a0[31] and assign this to S
+     
+     ● If S is 1, use the 'twos_complement' to determine two's complement
+     
+     form of R.
+     */
+    int s0 = a0; //N1 - Dividend
+    int s1 = a1; //N2 - Divisor
+    int s2 = 0;
+    int t0, t1;
+    int t2, t3;
+    int t4,t5;
+    
+    printf("s0: %d\n ", s0);
+    printf("s1: %d\n ", s1);
+    extract_nth_bit(&t2, a0, 31);
+    extract_nth_bit(&t3, a1, 31);
+    s2 = t2 ^ t3;
+    
+    s0 = twos_complement_if_neg(a0, &s0);
+    
+    s1 = twos_complement_if_neg(a1, &s1);
+    
+    
+    div_unsigned(s0,  s1, v0, v1);
+    
+    t0 = *v0;
+    t1 = *v1;
+    printf("v0: %d\n ", t0);
+    printf("v1: %d\n ", t1);
+    
+    if(s2==1){
+        *v0 = twos_complement(t0, &t3); //quotient
+    }
+    
+    if(t2==1){
+       * v1 = twos_complement(t1, &t4);//remainder
+    }
+   
+   
+    
+    printf("final v0: %d\n ", *v0);
+    printf("final v1: %d\n ", *v1);
+
+  
+    printf("---------------------------done mul_SIGNED---------------------------\n");
+    
 }
 int main(void){
     
@@ -279,12 +367,15 @@ int main(void){
     
     //printf("complement of %d: %d, complement of %d: %d\n", a0, v0, a1, v1);
     
-    int a0= 4;
-    int a1= 3;
-    
+    int a0 = -26;
+    int a1 = 64;
+    int v0 =0; int v1;
     int quotient=0;
     int remainder = 0;
-    div_unsigned(a0, a1, &quotient, &remainder);
+    div_signed(a0, a1, &quotient, &remainder);
     printf("%d / %d: qo = %d, re = %d \n", a0, a1, quotient, remainder);
+    
+   // printf("%d - %d: %d \n", a0, a1, sub_Logical(a0, a1, 1, &v1));
+    
 }
 

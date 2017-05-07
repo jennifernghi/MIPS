@@ -37,7 +37,7 @@ au_logical:
 	
 	beq $a2, '*', mul_signed
 	
-	beq $a2, '/', dodivide
+	beq $a2, '/', div_unsigned
 	
 add_logical:
 	li $a2, 0 #add mode $a2 = 0
@@ -74,7 +74,7 @@ add_sub_logical:
 #    }
 #    return v0;    
 #}
-	addi $sp, $sp, -32
+	addi $sp, $sp, -36
 	sw $ra, 0($sp)
 	sw $s0, 4($sp)
 	sw $s1, 8($sp)
@@ -83,6 +83,7 @@ add_sub_logical:
 	sw $t2, 20($sp)
 	sw $t3, 24($sp)
 	sw $t4, 28($sp)
+	sw $s2, 32($sp)
 
 	
 	li $s0, 0 # i = 0, index
@@ -128,7 +129,8 @@ add_sub_logical:
 		lw $t2, 20($sp)
 		lw $t3, 24($sp)
 		lw $t4, 28($sp)
-		addi $sp, $sp, 32
+		lw $s2, 32($sp)
+		addi $sp, $sp, 36
 		j exit
 	
 
@@ -411,18 +413,20 @@ div_unsigned:
 #        insert_one_to_nth_bit(&s3, 0, t0 , t3); // R[0] = Q[31]        
 #        s1 = s1 << 1;
 #        int t1 = sub_Logical (s3, s2, t3, &t7);//S        
-#        if(t1 >= 0){
-#            s3 =t1;
-#            insert_one_to_nth_bit(&s1, 0, t3 , t3); //Q[0] = 1
+#        if(t1 < 0){
 #            ++s0;
-#        }
-#        
-#        ++s0;        
+#        }else{
+#
+#        s3 =t1;
+#        insert_one_to_nth_bit(&s1, 0, 1 , 1); //Q[0] = 1
+#        printf("s1: %d\n", s1);        
+#        ++s0;
+#        }       
 #    }    
 #    *v0 = s1;
 #    *v1 = s3;
 #}	
-	addi $sp, $sp, 32
+	addi $sp, $sp, -44
 	sw $s0, 0($sp)
 	sw $s1, 4($sp)
 	sw $s2, 8($sp)
@@ -431,15 +435,38 @@ div_unsigned:
 	sw $t1, 20($sp)
 	sw $t2, 24($sp)
 	sw $t3, 28($sp)
+	sw $a0, 32($sp)
+	sw $a1, 36($sp)
+	sw $ra, 40($sp)
 	
 	
 	li $s0, 0 # i = 0
 	move $s1, $a0 # Q = a0 = Dividend
-	move $s2, $a2 # D = a1 = divisor	
+	move $s2, $a1 # D = a1 = divisor	
 	li $s3, 0 # R
 	li $t2, 31 
 	li $t3, 1
 	
+	div_unsigned_while:
+		beq $s0, 32, div_unsigned_end
+		sll $s3, $s3, 1
+		extract_nth_bit($t0, $s1, $t2) # Q[31]
+		insert_one_to_nth_bit($s3, $zero, $t0 , $t8) # R[0] = Q[31] 
+		sll $s1, $s1, 1
+		#int t1 = sub_Logical (s3, s2, t3, &t7);//S        
+		move $a0, $s3
+		move $a1, $s2
+		jal sub_logical
+		move $t1, $v0
+		blt $t1, 0, S_le_0
+		move $s3, $t1
+		insert_one_to_nth_bit($s1, $zero,$t3 , $t8)
+		addi $s0, $s0, 1
+		j div_unsigned_while
+	S_le_0:
+		addi $s0, $s0, 1
+		j div_unsigned_while
+		
 	div_unsigned_end:
 		move $v0, $s1 # v0 = Q
 		move $v1, $s3 # v1 = R
@@ -451,7 +478,11 @@ div_unsigned:
 		lw $t1, 20($sp)
 		lw $t2, 24($sp)
 		lw $t3, 28($sp)
-		addi $sp, $sp, -32
+		lw $a0, 32($sp)
+		lw $a1, 36($sp)
+		lw $ra, 40($sp)
+		addi $sp, $sp, 44
+		j exit
 	
 	
 exit:

@@ -414,7 +414,16 @@ div_signed:
 #       * v1 = twos_complement(*v1, &t1);//remainder
 #    }
 #}
-
+	addi $sp, $sp, -36
+	sw $ra, 0($sp)
+	sw $a0, 4($sp)
+	sw $a1, 8($sp)
+	sw $t2, 12($sp)
+	sw $t3, 16($sp)
+	sw $t4, 20($sp)
+	sw $s0, 24($sp)
+	sw $s1, 28($sp)
+	sw $s2, 32($sp)
 	move $s0, $a0
 	move $s1, $a1
 	li $t4, 31
@@ -436,6 +445,34 @@ div_signed:
 	
 	move $s0, $v0 # quotion
 	move $s1, $v1 # remainder
+	
+	beq $s2, 1, 2_compliment_Q
+	beq, $t2, 1, 2_compliment_R
+	
+	j div_unsigned_end
+	
+		2_compliment_Q:
+			move $a0, $v0
+			jal twos_complement
+			j exit
+		2_compliment_R:
+			move $a0, $v1
+			jal twos_complement
+			move $v1, $v0
+			j exit
+	
+	div_unsigned_end:
+		
+		lw $ra, 0($sp)
+		lw $a0, 4($sp)
+		lw $a1, 8($sp)
+		lw $t2, 12($sp)
+		lw $t3, 16($sp)
+		lw $t4, 20($sp)
+		lw $s0, 24($sp)
+		lw $s1, 28($sp)
+		lw $s2, 32($sp)
+		addi $sp, $sp, 36
 div_unsigned:
 #void div_unsigned(int a0,  int a1, int *v0, int *v1){
 #    

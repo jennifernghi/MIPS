@@ -131,11 +131,7 @@ add_sub_logical:
 		addi $sp, $sp, 32
 		j exit
 	
-dodivide:	
-	
-	j exit		
-	
-	
+
 twos_complement:
 #int twos_complement(int a0){
 #    a0  = ~a0;
@@ -395,6 +391,67 @@ mul_unsigned:
 	lw $a1, 44($sp)
 	addi $sp, $sp, 48
 	j exit	
+	
+
+div_unsigned:
+#void div_unsigned(int a0,  int a1, int *v0, int *v1){
+#    
+#    int s0=0; //i = 0
+#    int s1 = a0;//Q
+#    int s2 = a1;//D
+#    int s3 =0;//R
+#    int t2 = 31;
+#    int t3 =1;
+#    int t7;// dont need this in mips
+#    
+#    while(s0<32){
+#        s3 = s3 << 1;
+#        int t0;
+#        extract_nth_bit(&t0, s1, t2); // Q[31]
+#        insert_one_to_nth_bit(&s3, 0, t0 , t3); // R[0] = Q[31]        
+#        s1 = s1 << 1;
+#        int t1 = sub_Logical (s3, s2, t3, &t7);//S        
+#        if(t1 >= 0){
+#            s3 =t1;
+#            insert_one_to_nth_bit(&s1, 0, t3 , t3); //Q[0] = 1
+#            ++s0;
+#        }
+#        
+#        ++s0;        
+#    }    
+#    *v0 = s1;
+#    *v1 = s3;
+#}	
+	addi $sp, $sp, 32
+	sw $s0, 0($sp)
+	sw $s1, 4($sp)
+	sw $s2, 8($sp)
+	sw $s3, 12($sp)	
+	sw $t0, 16($sp)
+	sw $t1, 20($sp)
+	sw $t2, 24($sp)
+	sw $t3, 28($sp)
+	
+	
+	li $s0, 0 # i = 0
+	move $s1, $a0 # Q = a0 = Dividend
+	move $s2, $a2 # D = a1 = divisor	
+	li $s3, 0 # R
+	li $t2, 31 
+	li $t3, 1
+	
+	div_unsigned_end:
+		move $v0, $s1 # v0 = Q
+		move $v1, $s3 # v1 = R
+		lw $s0, 0($sp)
+		lw $s1, 4($sp)
+		lw $s2, 8($sp)
+		lw $s3, 12($sp)	
+		lw $t0, 16($sp)
+		lw $t1, 20($sp)
+		lw $t2, 24($sp)
+		lw $t3, 28($sp)
+		addi $sp, $sp, -32
 	
 	
 exit:

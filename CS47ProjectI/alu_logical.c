@@ -10,8 +10,6 @@
 void extract_nth_bit(int * regD, int regS, int regT) {
     
    * regD = (regS >> regT) & 1;
-    printf("regS: %d\n", regS);
-    printf("regT: %d\n", regT);
 }
 
 void insert_one_to_nth_bit(int * regD, int regS, int regT, int maskReg) {
@@ -228,6 +226,43 @@ void mul_signed(int a0,  int a1, int *v0, int *v1){
      printf("---------------------------done mul_SIGNED---------------------------\n");
     
 }
+// ao, a1, *v0, *v1
+void div_unsigned(int a0,  int a1, int *v0, int *v1){
+    printf("--------------------------- div_unsigned---------------------------\n");
+    
+    int s0=0; //i = 0
+    int s1 = a0;//Q
+    int s2 = a1;//D
+    int s3 =0;//R
+    int t2 = 31;
+    int t3 =1;
+    int t7;// dont need this in mips
+    
+    while(s0<32){
+        s3 = s3 << 1;
+        int t0;
+        extract_nth_bit(&t0, s1, t2); // Q[31]
+        insert_one_to_nth_bit(&s3, 0, t0 , t3); // R[0] = Q[31]
+        
+        s1 = s1 << 1;
+        int t1 = sub_Logical (s3, s2, t3, &t7);//S
+        
+        if(t1 >= 0){
+            s3 =t1;
+            insert_one_to_nth_bit(&s1, 0, t3 , t3); //Q[0] = 1
+            ++s0;
+        }
+        
+        ++s0;
+        
+    }
+    
+    *v0 = s1;
+    *v1 = s3;
+    
+    
+    printf("---------------------------done div_unsigned---------------------------\n");
+}
 int main(void){
     
     //unsigned int a0 = -7;
@@ -244,12 +279,12 @@ int main(void){
     
     //printf("complement of %d: %d, complement of %d: %d\n", a0, v0, a1, v1);
     
-    int a0= 16;
-    int a1=-3;
+    int a0= 4;
+    int a1= 3;
     
-    int lo=0;
-    int hi = 0;
-    mul_signed(a0, a1, &lo, &hi);
-    printf("%d * %d: lo = %d, hi = %d \n", a0, a1, lo, hi);
+    int quotient=0;
+    int remainder = 0;
+    div_unsigned(a0, a1, &quotient, &remainder);
+    printf("%d / %d: qo = %d, re = %d \n", a0, a1, quotient, remainder);
 }
 

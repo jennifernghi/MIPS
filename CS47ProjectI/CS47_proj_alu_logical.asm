@@ -240,7 +240,12 @@ mul_signed:
 #void mul_signed(int a0,  int a1, int *v0, int *v1){
 #int s0 = a0; //N1 - Multiplicand
 #    int s1 = a1; //N2 - multiplier
-    
+#    int t2, t3;
+#    
+#    extract_nth_bit(&t2, a0, 31);
+#    extract_nth_bit(&t3, a1, 31);
+#        
+#    int s2 = t2 ^ t3; //S
 #    //Make N1 two's complement if negative
 #    s0 = twos_complement_if_neg(a0, &s0);
 #    
@@ -251,12 +256,6 @@ mul_signed:
 #    mul_unsigned(s0,  s1, v0, v1);
 #    int t0 = *v0;
 #    int t1 = * v1;   
-#    int t2, t3;
-#    
-#    extract_nth_bit(&t2, a0, 31);
-#    extract_nth_bit(&t3, a1, 31);
-#        
-#    int s2 = t2 ^ t3; //S
 #    if(s2==1){
 #        twos_complement_64bit(t0, t1,  v0,  v1);
 #        //v0: lo ; v1: hi
@@ -277,7 +276,7 @@ mul_signed:
 	move $s1, $a1 # N2
 	extract_nth_bit($t2, $a0, $t4)
 	extract_nth_bit($t3, $a1, $t4)
-	
+	xor $s2, $t2, $t3 # s2 = t2 ^ t3
 	jal twos_complement_if_neg # a0 is still a0
 	move $s0, $v0 # return from twos_complement_if_neg, twos_complement of N1
 	move $a0, $s1 # a0 = s1 prepare for twos_complement_if_neg
@@ -290,7 +289,7 @@ mul_signed:
 	jal mul_unsigned
 	move $a0, $v0 # lo result
 	move $a1, $v1 # hi result
-	xor $s2, $t2, $t3 # s2 = t2 ^ t3
+	#xor $s2, $t2, $t3 # s2 = t2 ^ t3
 	beqz  $s2, mul_signed_end # if s2 ==0, just quit
 	jal twos_complement_64bit # if s2 ==1
 																																																																																																											

@@ -37,7 +37,7 @@ au_logical:
 	
 	beq $a2, '*', mul_signed
 	
-	beq $a2, '/', div_unsigned
+	beq $a2, '/', div_signed
 	
 add_logical:
 	li $a2, 0 #add mode $a2 = 0
@@ -427,8 +427,8 @@ div_signed:
 	move $s0, $a0
 	move $s1, $a1
 	li $t4, 31
-	extract_nth_bit($t2, $a0, $t4); # t2 = a0[31]
-	extract_nth_bit($t3, $a1,  $t4);  # t3 = a1[31] 
+	extract_nth_bit($t2, $a0, $t4) # t2 = a0[31]
+	extract_nth_bit($t3, $a1,  $t4)  # t3 = a1[31] 
 	xor $s2, $t2, $t3 #  s2 = t2 ^ t3;   
 	
 	jal twos_complement_if_neg # negate N1 if neg
@@ -446,22 +446,9 @@ div_signed:
 	move $s0, $v0 # quotion
 	move $s1, $v1 # remainder
 	
-	beq $s2, 1, 2_compliment_Q
-	beq, $t2, 1, 2_compliment_R
+	j div_signed_end
 	
-	j div_unsigned_end
-	
-		2_compliment_Q:
-			move $a0, $v0
-			jal twos_complement
-			j exit
-		2_compliment_R:
-			move $a0, $v1
-			jal twos_complement
-			move $v1, $v0
-			j exit
-	
-	div_unsigned_end:
+	div_signed_end:
 		
 		lw $ra, 0($sp)
 		lw $a0, 4($sp)
@@ -473,6 +460,7 @@ div_signed:
 		lw $s1, 28($sp)
 		lw $s2, 32($sp)
 		addi $sp, $sp, 36
+		j exit
 div_unsigned:
 #void div_unsigned(int a0,  int a1, int *v0, int *v1){
 #    

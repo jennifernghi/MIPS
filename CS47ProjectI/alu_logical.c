@@ -282,71 +282,34 @@ void div_unsigned(int a0,  int a1, int *v0, int *v1){
 
 void div_signed(int a0,  int a1, int *v0, int *v1){
     printf("---------------------------START mul_SIGNED---------------------------\n");
-    /*
-     N1 = $a0, N2 = $a1
-     
-     – Make N1 two's complement if negative
-     
-     – Make N2 two's complement if negative
-     
-     – Call unsigned Division using N1, N2. Say the result is Q and R
-     
-     – Determine sign S of Q
-     
-     ● Extract $a0[31] and $a1[31] bits and xor between them. The xor
-     
-     result is S.
-     
-     ● If S is 1, use the 'twos_complement' to determine two's complement
-     
-     form of Q.
-     
-     – Determine sign S of R
-     
-     ● Extract $a0[31] and assign this to S
-     
-     ● If S is 1, use the 'twos_complement' to determine two's complement
-     
-     form of R.
-     */
+   
     int s0 = a0; //N1 - Dividend
     int s1 = a1; //N2 - Divisor
     int s2 = 0;
     int t0, t1;
     int t2, t3;
-    int t4,t5;
     
-    printf("s0: %d\n ", s0);
-    printf("s1: %d\n ", s1);
-    extract_nth_bit(&t2, a0, 31);
-    extract_nth_bit(&t3, a1, 31);
+    
+    extract_nth_bit(&t2, a0, 31); // t2 = a0[31]
+    extract_nth_bit(&t3, a1, 31); // t3 = a1[31]
+    
     s2 = t2 ^ t3;
     
-    s0 = twos_complement_if_neg(a0, &s0);
+    s0 = twos_complement_if_neg(s0, &s0); // 2 complent N1 if neg
     
-    s1 = twos_complement_if_neg(a1, &s1);
+    s1 = twos_complement_if_neg(s1, &s1);// 2 complent N2 if neg
     
     
     div_unsigned(s0,  s1, v0, v1);
     
-    t0 = *v0;
-    t1 = *v1;
-    printf("v0: %d\n ", t0);
-    printf("v1: %d\n ", t1);
-    
+
     if(s2==1){
-        *v0 = twos_complement(t0, &t3); //quotient
+        *v0 = twos_complement(*v0, &t0); //quotient
     }
     
     if(t2==1){
-       * v1 = twos_complement(t1, &t4);//remainder
+       * v1 = twos_complement(*v1, &t1);//remainder
     }
-   
-   
-    
-    printf("final v0: %d\n ", *v0);
-    printf("final v1: %d\n ", *v1);
-
   
     printf("---------------------------done mul_SIGNED---------------------------\n");
     

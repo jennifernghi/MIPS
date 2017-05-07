@@ -394,7 +394,48 @@ mul_unsigned:
 	addi $sp, $sp, 48
 	j exit	
 	
+div_signed:
+#void div_signed(int a0,  int a1, int *v0, int *v1){
+#    int s0 = a0; //N1 - Dividend
+#    int s1 = a1; //N2 - Divisor
+#    int s2 = 0;
+#    int t0, t1;
+#    int t2, t3;    
+#    extract_nth_bit(&t2, a0, 31); // t2 = a0[31]
+#    extract_nth_bit(&t3, a1, 31);    // t3 = a1[31] 
+#     s2 = t2 ^ t3;    
+#    s0 = twos_complement_if_neg(s0, &s0);    
+#    s1 = twos_complement_if_neg(s1, &s1);    
+#    div_unsigned(s0,  s1, v0, v1);
+#    if(s2==1){
+#        *v0 = twos_complement(*v0, &t0); //quotient
+#    }    
+#    if(t2==1){
+#       * v1 = twos_complement(*v1, &t1);//remainder
+#    }
+#}
 
+	move $s0, $a0
+	move $s1, $a1
+	li $t4, 31
+	extract_nth_bit($t2, $a0, $t4); # t2 = a0[31]
+	extract_nth_bit($t3, $a1,  $t4);  # t3 = a1[31] 
+	xor $s2, $t2, $t3 #  s2 = t2 ^ t3;   
+	
+	jal twos_complement_if_neg # negate N1 if neg
+	move $s0, $v0
+	
+	move $a0, $s1
+	jal twos_complement_if_neg # negate N2 if neg
+	move $s1, $v0
+	
+	move $a0, $s0
+	move $a1, $s1
+	
+	jal div_unsigned
+	
+	move $s0, $v0 # quotion
+	move $s1, $v1 # remainder
 div_unsigned:
 #void div_unsigned(int a0,  int a1, int *v0, int *v1){
 #    

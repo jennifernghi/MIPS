@@ -289,7 +289,7 @@ mul_signed:
 	jal mul_unsigned
 	move $a0, $v0 # lo result
 	move $a1, $v1 # hi result
-	#xor $s2, $t2, $t3 # s2 = t2 ^ t3
+	
 	beqz  $s2, mul_signed_end # if s2 ==0, just quit
 	jal twos_complement_64bit # if s2 ==1
 																																																																																																											

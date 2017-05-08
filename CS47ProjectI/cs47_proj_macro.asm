@@ -33,8 +33,8 @@
 #$regS: Source bit pattern
 #$regT: Bit position n (0-31)
 .macro extract_nth_bit($regD, $regS, $regT)
-srav $regD, $regS, $regT
-andi $regD, $regD, 1
+srav $regD, $regS, $regT #rigth shift number in $regS by $regT
+andi $regD, $regD, 1 #mask it for 1st bit position value only. Assign this masked result to $regD.
 
 .end_macro
 
@@ -44,7 +44,7 @@ andi $regD, $regD, 1
 #$regT: Register that contains 0x1 or 0x0 (bit value to insert)
 #$maskReg: Register to hold temporary mask
 .macro insert_one_to_nth_bit($regD, $regS, $regT, $maskReg)
-li $maskReg, 1
+addi $maskReg, $zero,  1
 sllv $maskReg, $maskReg, $regS #shifting 0x1 for $regS amount
 not $maskReg, $maskReg # invert
 and $regD, $regD, $maskReg #Mask $regD with $maskReg.

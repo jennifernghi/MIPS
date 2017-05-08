@@ -302,14 +302,17 @@ void div_signed(int a0,  int a1, int *v0, int *v1){
     
     div_unsigned(s0,  s1, v0, v1);
     
-
+    printf("s2: %d\n", s2);
     if(s2==1){
         *v0 = twos_complement(*v0, &t0); //quotient
     }
     
+     printf("t2: %d\n", t2);
     if(t2==1){
        * v1 = twos_complement(*v1, &t1);//remainder
     }
+    
+   
   
     printf("---------------------------done mul_SIGNED---------------------------\n");
     
@@ -331,7 +334,7 @@ int main(void){
     //printf("complement of %d: %d, complement of %d: %d\n", a0, v0, a1, v1);
     
     int a0 = -26;
-    int a1 = 64;
+    int a1 = -64;
     int v0 =0; int v1;
     int quotient=0;
     int remainder = 0;

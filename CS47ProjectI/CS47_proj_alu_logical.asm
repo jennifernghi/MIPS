@@ -7,13 +7,9 @@ div: .asciiz "/"
 hi: .asciiz "hi"
 lo: .asciiz "lo"
 eq: .asciiz "="
-quotion: .asciiz "quotion"
-remainder: .asciiz "remainder"
+quotion: .asciiz "quotion "
+remainder: .asciiz "remainder "
 newline:	.asciiz  "\n"
-i: .asciiz  "i: "
-y: .asciiz  " y"
-carry: .asciiz  " carry"
-v0: .asciiz  " v0 "
 .text
 .globl au_logical
 # TBD: Complete your project procedures
@@ -92,8 +88,8 @@ add_sub_logical:
 	
 	move $s1, $a2
 	
-	beqz $s1, add_sub_logical_while_loop
-	not $a1, $a1
+	beqz $s1, add_sub_logical_while_loop # if a2 == 0 -> add mode
+	not $a1, $a1 # if a2 == 1 -> sub mode
 	
 	add_sub_logical_while_loop:
 		beq $s0, 32, add_sub_logical_exit
@@ -141,28 +137,31 @@ twos_complement:
 #    int a2 = 0;   
 #   return  add_Logical(&a0, &a1, &a2); 
 #}
-	addi $sp, $sp, -16
+	addi $sp, $sp, -24
 	sw $a0, 0($sp)
 	sw $a1, 4($sp)
 	sw $a2, 8($sp)
 	sw $ra, 12($sp)
-	
+	sw $s2, 16($sp)
+	sw $t2, 20($sp)
 	not $a0, $a0
 	li $a1, 1
 	jal add_logical # ~a0 + 1
-	 	
+	
+	lw $t2, 20($sp)
+	lw $s2, 16($sp) 	
 	lw $ra, 12($sp) 	
 	lw $a0, 0($sp)
 	lw $a1, 4($sp)
 	lw $a2, 8($sp) 	
-	addi $sp, $sp, 16
+	addi $sp, $sp, 24
 	j exit	
 twos_complement_if_neg:	
 #int twos_complement_if_neg(int a0){   
 #    if(a0<0)
 #        return  twos_complement(a0);   
 #}	
-	move $v0, $a0
+	move $v0, $a0 # if a0 != 0 -> no change
 	bltz $a0, twos_complement
 	j exit
 	
@@ -408,7 +407,7 @@ div_signed:
 #    div_unsigned(s0,  s1, v0, v1);
 #    if(s2==1){
 #        *v0 = twos_complement(*v0, &t0); //quotient
-#    }    
+#    }
 #    if(t2==1){
 #       * v1 = twos_complement(*v1, &t1);//remainder
 #    }
@@ -423,6 +422,7 @@ div_signed:
 	sw $s0, 24($sp)
 	sw $s1, 28($sp)
 	sw $s2, 32($sp)
+	
 	move $s0, $a0
 	move $s1, $a1
 	li $t4, 31
@@ -437,7 +437,8 @@ div_signed:
 	jal twos_complement_if_neg # negate N2 if neg
 	move $s1, $v0
 	
-	move $a0, $s0
+	#prepare for div_unsigned
+	move $a0, $s0 
 	move $a1, $s1
 	
 	jal div_unsigned
@@ -445,7 +446,50 @@ div_signed:
 	move $s0, $v0 # quotion
 	move $s1, $v1 # remainder
 	
+	
+	jal sign_quotient # correct the sign of quotient
+	
+	jal sign_remainder # correct the sign of remainder
+	
 	j div_signed_end
+	
+	sign_quotient:
+		addi $sp, $sp, -4
+		sw $ra, 0($sp)
+		
+		beqz $s2, sign_quotient_end #s2 ==0 -> return;
+		#otherwise, twos_complement(quotient)
+		move $a0, $s0
+		jal twos_complement
+		move $s0, $v0
+		
+		j sign_quotient_end
+		
+		sign_quotient_end:
+			move $v0, $s0
+			lw $ra, 0($sp)
+			addi $sp, $sp, 4
+			j exit
+			
+	sign_remainder:
+		addi $sp, $sp, -8
+		sw $ra, 0($sp)
+		sw $v0, 4($sp)
+		beqz $t2, sign_remainder_end # if $t2 == 0 -> return;
+		#otherwise, twos_complement(remainder)
+		move $a0, $s1
+		jal twos_complement
+		move $s1, $v0
+		
+		
+		j sign_remainder_end
+		
+		sign_remainder_end:
+			move $v1, $s1
+			lw $ra, 0($sp)
+			lw $v0, 4($sp)
+			addi $sp, $sp, 8
+			j exit
 	
 	div_signed_end:
 		
@@ -523,6 +567,7 @@ div_unsigned:
 		move $a1, $s2
 		jal sub_logical
 		move $t1, $v0
+		
 		blt $t1, 0, S_le_0
 		move $s3, $t1
 		insert_one_to_nth_bit($s1, $zero,$t3 , $t8)
